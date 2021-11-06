@@ -1,0 +1,42 @@
+﻿@model RentalKendaraan.Models.Pengembalian
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Pengembalian</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.TglPengembalian)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.TglPengembalian)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Denda)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Denda)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.IdKondisiNavigation)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.IdKondisiNavigation.IdKondisi)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.IdPeminjamanNavigation)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.IdPeminjamanNavigation.IdPinjaman)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.IdPengembalian">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
