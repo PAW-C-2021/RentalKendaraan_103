@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace RentalKendaraan.Models
 {
@@ -11,6 +12,8 @@ namespace RentalKendaraan.Models
         }
 
         public int IdJaminan { get; set; }
+
+        [Required(ErrorMessage = "Harus Ada Jaminan")]
         public string NamaJaminan { get; set; }
 
         public ICollection<Peminjaman> Peminjaman { get; set; }

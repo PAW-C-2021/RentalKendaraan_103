@@ -19,27 +19,57 @@ namespace RentalKendaraan.Controllers
         }
 
         // GET: Genders
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string nmgd, string searchString, string sortOrder, string currentFilter, int? pageNumber)
         {
-            return View(await _context.Gender.ToListAsync());
-        }
+            var nmgdList = new List<string>();
 
-        // GET: Genders/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
+            var nmgdQuery = from d in _context.Gender orderby d.NamaGender select d.NamaGender;
+
+            nmgdList.AddRange(nmgdQuery.Distinct());
+
+            ViewBag.nmgd = new SelectList(nmgdList);
+
+            var menu = from m in _context.Gender select m;
+
+            if (!string.IsNullOrEmpty(nmgd))
             {
-                return NotFound();
+                menu = menu.Where(x => x.NamaGender == nmgd);
             }
 
-            var gender = await _context.Gender
-                .FirstOrDefaultAsync(m => m.IdGender == id);
-            if (gender == null)
+            if (!string.IsNullOrEmpty(searchString))
             {
-                return NotFound();
+                menu = menu.Where(s => s.NamaGender.Contains(searchString));
             }
 
-            return View(gender);
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["DataSortParm"] = sortOrder == "Date" ? "date_dessc" : "Date";
+
+            switch (sortOrder)
+            {
+                case "data_desc":
+                    menu = menu.OrderByDescending(S => S.NamaGender);
+                    break;
+                default:
+                    menu = menu.OrderBy(s => s.NamaGender);
+                    break;
+            }
+
+            ViewData["CurrentSort"] = sortOrder;
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            int pageSize = 5;
+
+            return View(await PaginatedList<Gender>.CreateAsync(menu.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         // GET: Genders/Create

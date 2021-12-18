@@ -19,10 +19,63 @@ namespace RentalKendaraan.Controllers
         }
 
         // GET: Customers
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string gndr, string searchString, string sortOrder, string currentFilter, int? pageNumber)
         {
-            var rentKendaraanContext = _context.Customer.Include(c => c.IdGenderNavigation);
-            return View(await rentKendaraanContext.ToListAsync());
+            var gndrList = new List<string>();
+
+            var gndrQuery = from d in _context.Customer orderby d.NamaCustomer select d.NamaCustomer;
+
+            gndrList.AddRange(gndrQuery.Distinct());
+
+            ViewBag.gndr = new SelectList(gndrList);
+
+            var menu = from m in _context.Customer.Include(k => k.IdGenderNavigation) select m;
+
+            if (!string.IsNullOrEmpty(gndr))
+            {
+                menu = menu.Where(x => x.NamaCustomer == gndr);
+            }
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                menu = menu.Where(s => s.NoHp.Contains(searchString) || s.Nik.Contains(searchString) || s.Alamat.Contains(searchString) || s.IdGenderNavigation.NamaGender.Contains(searchString));
+            }
+
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["DataSortParm"] = sortOrder == "Date" ? "date_dessc" : "Date";
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    menu = menu.OrderByDescending(s => s.NamaCustomer);
+                    break;
+                case "Date":
+                    menu = menu.OrderBy(s => s.Alamat);
+                    break;
+                case "data_desc":
+                    menu = menu.OrderByDescending(S => S.Alamat);
+                    break;
+                default:
+                    menu = menu.OrderBy(s => s.NamaCustomer);
+                    break;
+            }
+
+            ViewData["CurrentSort"] = sortOrder;
+
+            if(searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            int pageSize = 5;
+
+            return View(await PaginatedList<Customer>.CreateAsync (menu.AsNoTracking(), pageNumber?? 1, pageSize));
         }
 
         // GET: Customers/Details/5

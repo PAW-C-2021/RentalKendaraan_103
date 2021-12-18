@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace RentalKendaraan.Models
 {
@@ -11,6 +12,8 @@ namespace RentalKendaraan.Models
         }
 
         public int IdGender { get; set; }
+
+        [MaxLength(1, ErrorMessage = "Gender tidak boleh lebih dari 1")]
         public string NamaGender { get; set; }
 
         public ICollection<Customer> Customer { get; set; }

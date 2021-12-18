@@ -19,10 +19,63 @@ namespace RentalKendaraan.Controllers
         }
 
         // GET: Peminjamen
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string idcs, string searchString, string sortOrder, string currentFilter, int? pageNumber)
         {
-            var rentKendaraanContext = _context.Peminjaman.Include(p => p.IdCustomerNavigation).Include(p => p.IdJaminanNavigation).Include(p => p.IdKendaraanNavigation);
-            return View(await rentKendaraanContext.ToListAsync());
+            var idcsList = new List<string>();
+
+            var idcsQuery = from d in _context.Peminjaman orderby d.IdCustomerNavigation.NamaCustomer.ToString() select d.IdCustomerNavigation.NamaCustomer.ToString();
+
+            idcsList.AddRange(idcsQuery.Distinct());
+
+            ViewBag.idcs = new SelectList(idcsList);
+
+            var menu = from m in _context.Peminjaman.Include(k => k.IdCustomerNavigation).Include(k => k.IdJaminanNavigation).Include(k => k.IdKendaraanNavigation) select m;
+
+            if (!string.IsNullOrEmpty(idcs))
+            {
+                menu = menu.Where(x => x.IdCustomerNavigation.NamaCustomer.ToString() == idcs);
+            }
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                menu = menu.Where(s => s.IdKendaraanNavigation.NamaKendaraan.Contains(searchString) || s.IdJaminanNavigation.NamaJaminan.Contains(searchString) || s.Biaya.ToString().Contains(searchString));
+            }
+
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["DataSortParm"] = sortOrder == "Date" ? "date_dessc" : "Date";
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    menu = menu.OrderByDescending(s => s.IdCustomerNavigation.NamaCustomer);
+                    break;
+                case "Date":
+                    menu = menu.OrderBy(s => s.TglPeminjaman);
+                    break;
+                case "data_desc":
+                    menu = menu.OrderByDescending(S => S.TglPeminjaman);
+                    break;
+                default:
+                    menu = menu.OrderBy(s => s.IdCustomerNavigation.NamaCustomer);
+                    break;
+            }
+
+            ViewData["CurrentSort"] = sortOrder;
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            int pageSize = 5;
+
+            return View(await PaginatedList<Peminjaman>.CreateAsync(menu.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         // GET: Peminjamen/Details/5

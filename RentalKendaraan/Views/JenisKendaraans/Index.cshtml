@@ -1,35 +1,65 @@
-﻿@model IEnumerable<RentalKendaraan.Models.JenisKendaraan>
+﻿@model PaginatedList<RentalKendaraan.Models.JenisKendaraan>
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h2>Index</h2>
+<h2>JENIS KENDARAAN</h2>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<a asp-action="Create">Tambah Data Baru</a>
+
+@using (Html.BeginForm("index", "JenisKendaraans", FormMethod.Get))
+{
+    <p>
+        Jenis Kendaraan :@Html.DropDownList("nmgd", "Jenis Kendaraan")
+        Cari Data : @Html.TextBox("searchString");
+        <input type="submit" value="Filter" />
+
+    </p>
+}
+
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.NamaJenisKendaraan)
+                @*Html.DisplayName("Nama Jenis Kendaraan")*@
+                <a asp-action="Index" asp-route-sortOrder="@ViewData["DataSortParm"]" asp-route-currentFilter="@ViewData["CurrentFilter"]">Nama Jenis Kendaraan</a>
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.NamaJenisKendaraan)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.IdJenisKendaraan">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.IdJenisKendaraan">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.IdJenisKendaraan">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.NamaJenisKendaraan)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.IdJenisKendaraan"><i class="fa fa-marker fa-lg"></i></a> |
+                    <a asp-action="Details" asp-route-id="@item.IdJenisKendaraan"><i class="fas fa-list"></i></a> |
+                    <a asp-action="Delete" asp-route-id="@item.IdJenisKendaraan"><i class="fa fa-trash-alt fa-lg"></i></a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+@{
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+}
+
+<a asp-action="Index"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex + 1)"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   class="btn btn-default @prevDisabled">
+    Previous
+</a>
+<a asp-action="Index"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex + 1)"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   class="btn btn-default @nextDisabled">
+    Next
+</a>

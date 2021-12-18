@@ -19,10 +19,63 @@ namespace RentalKendaraan.Controllers
         }
 
         // GET: Pengembalians
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string idpjm, string searchString, string sortOrder, string currentFilter, int? pageNumber)
         {
-            var rentKendaraanContext = _context.Pengembalian.Include(p => p.IdKondisiNavigation).Include(p => p.IdPeminjamanNavigation);
-            return View(await rentKendaraanContext.ToListAsync());
+            var idpjmList = new List<string>();
+
+            var idpjmQuery = from d in _context.Pengembalian orderby d.IdPeminjaman.ToString() select d.IdPeminjaman.ToString();
+
+            idpjmList.AddRange(idpjmQuery.Distinct());
+
+            ViewBag.idpjm = new SelectList(idpjmList);
+
+            var menu = from m in _context.Pengembalian.Include(k => k.IdKondisiNavigation).Include(k => k.IdPeminjamanNavigation) select m;
+
+            if (!string.IsNullOrEmpty(idpjm))
+            {
+                menu = menu.Where(x => x.IdPeminjaman.ToString() == idpjm);
+            }
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                menu = menu.Where(s => s.IdKondisiNavigation.NamaKondisi.Contains(searchString) || s.Denda.ToString().Contains(searchString) || s.TglPengembalian.ToString().Contains(searchString));
+            }
+
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["DataSortParm"] = sortOrder == "Date" ? "date_dessc" : "Date";
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    menu = menu.OrderByDescending(s => s.Denda);
+                    break;
+                case "Date":
+                    menu = menu.OrderBy(s => s.TglPengembalian);
+                    break;
+                case "data_desc":
+                    menu = menu.OrderByDescending(S => S.TglPengembalian);
+                    break;
+                default:
+                    menu = menu.OrderBy(s => s.Denda);
+                    break;
+            }
+
+            ViewData["CurrentSort"] = sortOrder;
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            int pageSize = 5;
+
+            return View(await PaginatedList<Pengembalian>.CreateAsync(menu.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         // GET: Pengembalians/Details/5

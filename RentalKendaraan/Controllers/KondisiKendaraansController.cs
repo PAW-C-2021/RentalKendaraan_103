@@ -19,9 +19,57 @@ namespace RentalKendaraan.Controllers
         }
 
         // GET: KondisiKendaraans
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string nmgd, string searchString, string sortOrder, string currentFilter, int? pageNumber)
         {
-            return View(await _context.KondisiKendaraan.ToListAsync());
+            var nmgdList = new List<string>();
+
+            var nmgdQuery = from d in _context.KondisiKendaraan orderby d.NamaKondisi select d.NamaKondisi;
+
+            nmgdList.AddRange(nmgdQuery.Distinct());
+
+            ViewBag.nmgd = new SelectList(nmgdList);
+
+            var menu = from m in _context.KondisiKendaraan select m;
+
+            if (!string.IsNullOrEmpty(nmgd))
+            {
+                menu = menu.Where(x => x.NamaKondisi == nmgd);
+            }
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                menu = menu.Where(s => s.NamaKondisi.Contains(searchString));
+            }
+
+            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["DataSortParm"] = sortOrder == "Date" ? "date_dessc" : "Date";
+
+            switch (sortOrder)
+            {
+                case "data_desc":
+                    menu = menu.OrderByDescending(S => S.NamaKondisi);
+                    break;
+                default:
+                    menu = menu.OrderBy(s => s.NamaKondisi);
+                    break;
+            }
+
+            ViewData["CurrentSort"] = sortOrder;
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            int pageSize = 5;
+
+            return View(await PaginatedList<KondisiKendaraan>.CreateAsync(menu.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         // GET: KondisiKendaraans/Details/5
